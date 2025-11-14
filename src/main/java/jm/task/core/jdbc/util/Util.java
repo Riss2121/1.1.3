@@ -1,20 +1,16 @@
 package jm.task.core.jdbc.util;
 
-import jm.task.core.jdbc.model.User;
-
-import java.net.URL;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class Util {
+public final class Util {
     public static final String URL = "jdbc:mysql://localhost:3306/DBPP";
     public static final String USER = "root";
     public static final String PASSWORD = "root";
     public static Connection connection;
 
-    public static Connection getConnection(){
+    public static Connection getConnection() {
         try {
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
 
@@ -24,6 +20,7 @@ public class Util {
         return connection;
 
     }
+
     public static void closeConnection() {
         if (connection != null) {
             try {
