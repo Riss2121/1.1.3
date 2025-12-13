@@ -2,6 +2,7 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.NativeQuery;
@@ -23,52 +24,68 @@ public class UserDaoHibernateImpl implements UserDao {
                 "lastName VARCHAR(255), " +
                 "age TINYINT" +
                 ")";
+        Transaction tx = null;
         try (Session session = Util.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
+            tx = session.beginTransaction();
             NativeQuery<?> query = session.createNativeQuery(sql);
             query.executeUpdate();
             tx.commit();
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось создать таблицу", e);
+        } catch (HibernateException e) {
+            if (tx != null){
+                tx.rollback();
+            }
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void dropUsersTable() {
         String sql = "DROP TABLE IF EXISTS users";
+        Transaction tx = null;
         try (Session session = Util.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
+            tx = session.beginTransaction();
             NativeQuery<?> query = session.createNativeQuery(sql);
             query.executeUpdate();
             tx.commit();
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось удалить таблицу", e);
+        } catch (HibernateException e) {
+            if (tx != null){
+                tx.rollback();
+            }
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
         User user = new User(name, lastName, age);
+        Transaction tx = null;
         try (Session session = Util.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
+            tx = session.beginTransaction();
             session.save(user);
             tx.commit();
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось сохранить пользователя", e);
+        } catch (HibernateException e) {
+            if (tx != null){
+                tx.rollback();
+            }
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void removeUserById(long id) {
+        Transaction tx = null;
         try (Session session = Util.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
+            tx = session.beginTransaction();
             User user = session.get(User.class, id);
             if (user != null) {
                 session.delete(user);
             }
             tx.commit();
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось удалить пользователя по ID", e);
+        } catch (HibernateException e) {
+           if (tx != null){
+               tx.rollback();
+           }
+           throw new RuntimeException(e);
         }
     }
 
@@ -77,7 +94,7 @@ public class UserDaoHibernateImpl implements UserDao {
         try (Session session = Util.getSessionFactory().openSession()) {
             Query<User> query = session.createQuery("FROM User", User.class);
             return query.list();
-        } catch (Exception e) {
+        } catch (HibernateException e) {
             throw new RuntimeException("Не удалось получить список пользователей", e);
         }
     }
@@ -85,13 +102,17 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void cleanUsersTable() {
         String sql = "TRUNCATE TABLE users";
+        Transaction tx = null;
         try (Session session = Util.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
+            tx = session.beginTransaction();
             NativeQuery<?> query = session.createNativeQuery(sql);
             query.executeUpdate();
             tx.commit();
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось очистить таблицу", e);
+        } catch (HibernateException e) {
+            if (tx != null){
+                tx.rollback();
+            }
+            throw new RuntimeException(e);
         }
     }
 }
